@@ -1,21 +1,51 @@
-const mongoose = require('mongoose')
+const mongoose = require("mongoose");
 
-const transactionSchema = new mongoose.Schema({
-    user: {
-        type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true
+const transactionSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
-    merchant: {
-        type: mongoose.Schema.Types.ObjectId, ref: 'merchent'
+    merchantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Merchant",
     },
     amount: {
-        type: mongoose.Schema.Types.Decimal128, required: true
+      type: Number,
+      required: true,
+      min: 0,
     },
     type: {
-        type: String, enum: ['recharge', 'payment'], required: true
+      type: String,
+      enum: [
+        "recharge",
+        "payment",
+        "cashback",
+        "commission",
+        "merchant_credit",
+        "withdrawal_request",
+        "withdrawal_settle",
+      ],
+      required: true,
     },
-    createdAt: { type: Date, default: Date.now }
-})
 
-transactionSchema.index({ user: 1, createdAt: -1 })
+    direction: {
+      type: String,
+      enum: ["credit", "debit"],
+      required: true,
+    },
 
-module.exports = mongoose.model('Transaction', transactionSchema);
+    meta: {
+      type: Object,
+      default: {},
+    },
+  },
+  { timestamps: true }
+);
+
+transactionSchema.index({ userId: 1, createdAt: -1 });
+transactionSchema.index({ merchantId: 1, createdAt: -1 });
+
+const Transaction = mongoose.model("Transaction", transactionSchema);
+
+module.exports = Transaction;
