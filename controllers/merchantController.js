@@ -74,7 +74,7 @@ const login = async (req, res) => {
 
     const payload = { id: merchant._id, role: merchant.role };
 
-    console.log("🔑 Merchant login payload:", payload);
+    console.log("Merchant login payload:", payload);
 
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXP });
 
