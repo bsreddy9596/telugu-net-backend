@@ -18,7 +18,8 @@ const requestOtp = async (req, res) => {
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const codeHash = crypto.createHash("sha256").update(otp).digest("hex");
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 mins
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    ins;
 
     await Otp.findOneAndUpdate(
       { phone },
@@ -28,7 +29,13 @@ const requestOtp = async (req, res) => {
 
     await sendOtp(phone, otp);
 
-    return res.json({ success: true, message: "OTP sent successfully" });
+    const tempToken = JWT.sign({ phone }, JWT_SECRET, { expiresIn: "5m" });
+
+    return res.json({
+      success: true,
+      message: "OTP sent successfully",
+      token: tempToken,
+    });
   } catch (error) {
     console.error("requestOtp error:", error);
     return res.status(500).json({ success: false, message: "Server error" });
@@ -37,11 +44,22 @@ const requestOtp = async (req, res) => {
 
 const verifyOtp = async (req, res) => {
   try {
-    const { phone, code, name, email } = req.body;
-    if (!phone || !code) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Missing Authorization header" });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decoded = JWT.verify(token, JWT_SECRET);
+    const phone = decoded.phone;
+
+    const { code, name, email } = req.body;
+    if (!code) {
       return res
         .status(400)
-        .json({ success: false, message: "Phone and OTP required" });
+        .json({ success: false, message: "OTP code required" });
     }
 
     const otpDoc = await Otp.findOne({ phone });
@@ -76,7 +94,7 @@ const verifyOtp = async (req, res) => {
     await Otp.deleteMany({ phone });
 
     const payload = { id: user._id, phone: user.phone, role: user.role };
-    const token = JWT.sign(payload, JWT_SECRET, { expiresIn: JWT_EXP });
+    const mainToken = JWT.sign(payload, JWT_SECRET, { expiresIn: JWT_EXP });
 
     const userObj = user.toObject();
     delete userObj.password;
@@ -84,7 +102,7 @@ const verifyOtp = async (req, res) => {
     return res.json({
       success: true,
       message: "OTP verified, login successful",
-      token,
+      token: mainToken,
       user: userObj,
     });
   } catch (error) {
