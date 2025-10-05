@@ -19,7 +19,6 @@ const requestOtp = async (req, res) => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const codeHash = crypto.createHash("sha256").update(otp).digest("hex");
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
-    ins;
 
     await Otp.findOneAndUpdate(
       { phone },
