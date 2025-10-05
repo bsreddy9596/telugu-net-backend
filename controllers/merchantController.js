@@ -74,7 +74,7 @@ const login = async (req, res) => {
 
     const payload = { id: merchant._id, role: merchant.role };
 
-    console.log("🔑 Merchant login payload:", payload);
+    console.log("Merchant login payload:", payload);
 
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXP });
 
@@ -102,7 +102,7 @@ const getProfile = async (req, res) => {
     );
 
     if (!merchant) {
-      console.log("❌ Merchant not found in DB for ID:", req.user.id);
+      console.log("Merchant not found in DB for ID:", req.user.id);
       return res
         .status(404)
         .json({ success: false, message: "Merchant not found" });
