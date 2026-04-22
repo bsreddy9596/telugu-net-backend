@@ -1,14 +1,14 @@
 const express = require("express");
 const router = express.Router();
-const paymentController = require("../controllers/paymentController");
 const verifyToken = require("../middlewares/verifyToken");
-const checkRole = require("../middlewares/checkRole");
+const { 
+  initiateQrPay, 
+  verifyQrPay, 
+  handleWebhook 
+} = require("../controllers/paymentController");
 
-router.post(
-  "/qr",
-  verifyToken,
-  checkRole(["user"]),
-  paymentController.qrPayment
-);
+router.post("/qr/initiate", verifyToken, initiateQrPay);
+router.post("/qr/verify", verifyToken, verifyQrPay);
+router.post("/webhook", express.raw({ type: "application/json" }), handleWebhook);
 
 module.exports = router;

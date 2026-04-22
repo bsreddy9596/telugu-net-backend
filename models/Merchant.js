@@ -2,50 +2,91 @@ const mongoose = require("mongoose");
 
 const merchantSchema = new mongoose.Schema(
   {
-    email: {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    phone: {
       type: String,
       required: true,
       unique: true,
+    },
+    email: {
+      type: String,
+      required: true,
       lowercase: true,
     },
-    password: {
-      type: String,
+    dateOfBirth: {
+      type: Date,
       required: true,
-      minlength: 6,
+      alias: "dob",
     },
-    shop_name: {
-      type: String,
-      required: true,
-      trim: true,
+    businessDetails: {
+      name: { type: String },
+      type: { type: String },
+      address: { type: String },
+      city: { type: String },
+      state: { type: String },
+      pincode: { type: String },
     },
-    category: {
-      type: String,
-      trim: true,
-    },
-    bank_details: {
-      bank_name: { type: String, required: true },
-      account_number: { type: String, required: true },
-      ifsc_code: { type: String, required: true },
-      holder_name: { type: String, required: true },
+    bankDetails: {
+      accountHolder: { type: String },
+      accountNumber: { type: String },
+      ifsc: { type: String },
+      bankName: { type: String },
+      accountType: { type: String },
     },
     isApproved: {
       type: Boolean,
       default: false,
     },
-    qrCodeId: {
+    status: {
       type: String,
-      unique: true,
-      sparse: true,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+    },
+    ownerUserId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
     role: {
       type: String,
       enum: ["merchant"],
       default: "merchant",
     },
+    location: {
+      lat: { type: Number },
+      lng: { type: Number },
+    },
+    isSponsored: {
+      type: Boolean,
+      default: false,
+    },
+    rating: {
+      type: Number,
+      default: 0,
+    },
+    discount: {
+      type: String,
+    },
+    image: {
+      type: String,
+    },
+    category: {
+      type: String,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );
 
-const Merchant = mongoose.model("merchant", merchantSchema);
+merchantSchema.index({ "location": "2dsphere" });
+
+const Merchant = mongoose.model("Merchant", merchantSchema);
 
 module.exports = Merchant;

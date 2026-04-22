@@ -1,26 +1,25 @@
 const express = require("express");
 const router = express.Router();
-const adController = require("../controllers/adController");
 const verifyToken = require("../middlewares/verifyToken");
-const checkRole = require("../middlewares/checkRole");
+const validate = require("../middlewares/validate");
+const {
+  createAd,
+  getMyAds,
+  reviewAd,
+  getAllAds,
+  getPremiumAds,
+} = require("../controllers/adController");
 
-router.post("/", verifyToken, checkRole(["merchant"]), adController.createAd);
-router.get(
-  "/mine",
-  verifyToken,
-  checkRole(["merchant"]),
-  adController.getMyAds
-);
+const {
+  createAdValidation,
+  reviewAdValidation,
+  getAdsValidation,
+} = require("../validations/adValidation");
 
-router.put(
-  "/:adId/review",
-  verifyToken,
-  checkRole(["admin"]),
-  adController.reviewAd
-);
-
-router.get("/", verifyToken, checkRole(["admin"]), adController.getAllAds);
-
-router.get("/premium", adController.getPremiumAds);
+router.get("/", getAdsValidation, validate, getAllAds);
+router.get("/premium", getPremiumAds);
+router.post("/", verifyToken, createAdValidation, validate, createAd);
+router.get("/my-ads", verifyToken, getMyAds);
+router.patch("/:adId/review", verifyToken, reviewAdValidation, validate, reviewAd);
 
 module.exports = router;

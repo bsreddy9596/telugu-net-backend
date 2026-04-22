@@ -1,14 +1,16 @@
+const env = require("./env");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
+const logger = require("./logger");
 
 const initAdmin = async () => {
     try {
-        const adminEmail = process.env.ADMIN_EMAIL;
-        const adminPassword = process.env.ADMIN_PASSWORD;
-        const adminRole = process.env.ADMIN_ROLE || "admin";
+        const adminEmail = env.admin?.email;
+        const adminPassword = env.admin?.password;
+        const adminRole = env.admin?.role || "admin";
 
         if (!adminEmail || !adminPassword) {
-            console.warn("⚠️ ADMIN_EMAIL or ADMIN_PASSWORD missing in .env");
+            logger.warn("ADMIN_EMAIL or ADMIN_PASSWORD missing in .env");
             return;
         }
 
@@ -27,12 +29,12 @@ const initAdmin = async () => {
                 walletBalance: 0,
             });
 
-            console.log("Admin created with email:", admin.email);
+            logger.info("Admin created", { email: admin.email });
         } else {
-            console.log("iAdmin already exists:", admin.email);
+            logger.info("Admin already exists", { email: admin.email });
         }
     } catch (err) {
-        console.error(" Error initializing admin:", err);
+        logger.error("Error initializing admin", { message: err.message });
     }
 };
 

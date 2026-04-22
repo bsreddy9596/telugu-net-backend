@@ -1,79 +1,58 @@
 const express = require("express");
-const router = express.Router();
-const adminController = require("../controllers/adminController");
+const router = require("express").Router();
 const verifyToken = require("../middlewares/verifyToken");
-const checkRole = require("../middlewares/checkRole");
+const validate = require("../middlewares/validate");
+const {
+  adminLogin,
+  listUsers,
+  approveUser,
+  deactivateUser,
+  listMerchants,
+  approveMerchant,
+  rejectMerchant,
+  getRevenueReport,
+  getAnalytics,
+  listPendingAds,
+  approveAd,
+  rejectAd,
+  listPendingWithdrawals,
+  settleWithdrawal,
+} = require("../controllers/adminController");
 
-router.post("/login", adminController.adminLogin);
+const {
+  adminLoginValidation,
+  userIdValidation,
+  merchantIdValidation,
+  adIdValidation,
+  settleWithdrawalValidation,
+} = require("../validations/adminValidation");
 
-router.get(
-  "/users",
-  verifyToken,
-  checkRole(["admin"]),
-  adminController.listUsers
-);
-router.put(
-  "/users/:userId/approve",
-  verifyToken,
-  checkRole(["admin"]),
-  adminController.approveUser
-);
-router.put(
-  "/users/:userId/deactivate",
-  verifyToken,
-  checkRole(["admin"]),
-  adminController.deactivateUser
-);
+router.post("/login", adminLoginValidation, validate, adminLogin);
 
-router.get(
-  "/merchants",
-  verifyToken,
-  checkRole(["admin"]),
-  adminController.listMerchants
-);
-router.put(
-  "/merchants/:merchantId/approve",
-  verifyToken,
-  checkRole(["admin"]),
-  adminController.approveMerchant
-);
-router.put(
-  "/merchants/:merchantId/reject",
-  verifyToken,
-  checkRole(["admin"]),
-  adminController.rejectMerchant
-);
+router.get("/users", verifyToken, listUsers);
 
-router.get(
-  "/revenue",
-  verifyToken,
-  checkRole(["admin"]),
-  adminController.getRevenueReport
-);
-router.get(
-  "/analytics",
-  verifyToken,
-  checkRole(["admin"]),
-  adminController.getAnalytics
-);
+router.put("/users/:userId/approve", verifyToken, userIdValidation, validate, approveUser);
 
-router.get(
-  "/ads/pending",
-  verifyToken,
-  checkRole(["admin"]),
-  adminController.listPendingAds
-);
-router.put(
-  "/ads/:adId/approve",
-  verifyToken,
-  checkRole(["admin"]),
-  adminController.approveAd
-);
-router.put(
-  "/ads/:adId/reject",
-  verifyToken,
-  checkRole(["admin"]),
-  adminController.rejectAd
-);
+router.put("/users/:userId/deactivate", verifyToken, userIdValidation, validate, deactivateUser);
+
+router.get("/merchants", verifyToken, listMerchants);
+
+router.put("/merchants/:merchantId/approve", verifyToken, merchantIdValidation, validate, approveMerchant);
+
+router.put("/merchants/:merchantId/reject", verifyToken, merchantIdValidation, validate, rejectMerchant);
+
+router.get("/revenue", verifyToken, getRevenueReport);
+
+router.get("/analytics", verifyToken, getAnalytics);
+
+router.get("/ads/pending", verifyToken, listPendingAds);
+
+router.put("/ads/:adId/approve", verifyToken, adIdValidation, validate, approveAd);
+
+router.put("/ads/:adId/reject", verifyToken, adIdValidation, validate, rejectAd);
+
+router.get("/withdrawals/pending", verifyToken, listPendingWithdrawals);
+
+router.post("/withdrawals/:id/settle", verifyToken, settleWithdrawalValidation, validate, settleWithdrawal);
 
 module.exports = router;

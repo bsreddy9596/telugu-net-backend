@@ -1,41 +1,130 @@
-const User = require("../models/User");
-const Transaction = require("../models/Transaction");
+const userService = require("../services/userService");
+const discoveryService = require("../services/discoveryService");
+const asyncHandler = require("../middlewares/asyncHandler");
+const HTTP_STATUS = require("../constants/httpStatus");
+const { USER_MESSAGES } = require("../constants/messages");
 
-const getProfile = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id).select("-password -__v");
-    if (!user) return res.status(404).json({ message: "User not found" });
+exports.getProfile = asyncHandler(async (req, res) => {
+  const user = await userService.getProfile(req.user.id);
+  res.status(HTTP_STATUS.OK).json({ 
+    statusCode: HTTP_STATUS.OK, 
+    success: true, 
+    message: USER_MESSAGES.PROFILE_FETCHED, 
+    data: user 
+  });
+});
 
-    return res.json({ user });
-  } catch (error) {
-    console.error("getProfile error:", error);
-    return res.status(500).json({ message: "Server error" });
-  }
-};
+exports.updateProfile = asyncHandler(async (req, res) => {
+  const user = await userService.updateProfile(req.user.id, req.body);
+  res.status(HTTP_STATUS.OK).json({ 
+    statusCode: HTTP_STATUS.OK, 
+    success: true, 
+    message: USER_MESSAGES.PROFILE_UPDATED, 
+    data: user 
+  });
+});
 
-const updateProfile = async (req, res) => {
-  try {
-    const { name, email } = req.body;
-    const updates = {};
+exports.uploadProfileImage = asyncHandler(async (req, res) => {
+  if (!req.file) return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
+    statusCode: HTTP_STATUS.BAD_REQUEST, 
+    success: false, 
+    message: USER_MESSAGES.IMAGE_REQUIRED 
+  });
+  const user = await userService.uploadProfileImage(req.user.id, req.file.publicUrl);
+  res.status(HTTP_STATUS.OK).json({ 
+    statusCode: HTTP_STATUS.OK, 
+    success: true, 
+    message: USER_MESSAGES.PROFILE_IMAGE_UPDATED, 
+    data: user 
+  });
+});
 
-    if (name) updates.name = name;
-    if (email) updates.email = email.toLowerCase();
+exports.completeProfile = asyncHandler(async (req, res) => {
+  const result = await userService.completeProfile(req.user.id, req.body);
+  res.status(result.statusCode).json(result);
+});
 
-    const updated = await User.findByIdAndUpdate(req.user.id, updates, {
-      new: true,
-      runValidators: true,
-    }).select("-password -__v");
+exports.getUserSettings = asyncHandler(async (req, res) => {
+  const settings = await userService.getUserSettings(req.user.id);
+  res.status(HTTP_STATUS.OK).json({ 
+    statusCode: HTTP_STATUS.OK, 
+    success: true, 
+    message: USER_MESSAGES.SETTINGS_FETCHED, 
+    data: settings 
+  });
+});
 
-    if (!updated) return res.status(404).json({ message: "User not found" });
+exports.updateUserSettings = asyncHandler(async (req, res) => {
+  const settings = await userService.updateUserSettings(req.user.id, req.body);
+  res.status(HTTP_STATUS.OK).json({ 
+    statusCode: HTTP_STATUS.OK, 
+    success: true, 
+    message: USER_MESSAGES.SETTINGS_UPDATED, 
+    data: settings 
+  });
+});
 
-    return res.json({ message: "Profile updated", user: updated });
-  } catch (error) {
-    console.error("updateProfile error:", error);
-    return res.status(500).json({ message: "Server error" });
-  }
-};
+exports.updateFcmToken = asyncHandler(async (req, res) => {
+  await userService.updateFcmToken(req.user.id, req.body.fcmToken);
+  res.status(HTTP_STATUS.OK).json({ 
+    statusCode: HTTP_STATUS.OK, 
+    success: true, 
+    message: USER_MESSAGES.FCM_TOKEN_UPDATED 
+  });
+});
 
-module.exports = {
-  getProfile,
-  updateProfile,
-};
+exports.getHomeData = asyncHandler(async (req, res) => {
+  const data = await userService.getHomeData(req.user.id, req.query);
+  res.status(HTTP_STATUS.OK).json({
+    statusCode: HTTP_STATUS.OK,
+    success: true,
+    message: "Home data fetched successfully",
+    data
+  });
+});
+
+exports.getPlan = asyncHandler(async (req, res) => {
+  const plan = await userService.getPlan(req.user.id);
+  if (!plan) return res.status(HTTP_STATUS.NOT_FOUND).json({ 
+    statusCode: HTTP_STATUS.NOT_FOUND, 
+    success: false, 
+    message: "No active plan found" 
+  });
+  res.status(HTTP_STATUS.OK).json({ 
+    statusCode: HTTP_STATUS.OK, 
+    success: true, 
+    message: "Plan details fetched", 
+    data: plan 
+  });
+});
+
+exports.getOffers = asyncHandler(async (req, res) => {
+  const offers = await discoveryService.getOffers();
+  res.status(HTTP_STATUS.OK).json({ 
+    statusCode: HTTP_STATUS.OK, 
+    success: true, 
+    message: "Offers fetched", 
+    data: offers 
+  });
+});
+
+exports.getNearbyShops = asyncHandler(async (req, res) => {
+  const { lat, lng, category } = req.query;
+  const shops = await discoveryService.getNearbyShops(lat, lng, category);
+  res.status(HTTP_STATUS.OK).json({ 
+    statusCode: HTTP_STATUS.OK, 
+    success: true, 
+    message: "Nearby shops fetched", 
+    data: shops 
+  });
+});
+
+exports.getReferral = asyncHandler(async (req, res) => {
+  const referral = await userService.getReferral(req.user.id);
+  res.status(HTTP_STATUS.OK).json({ 
+    statusCode: HTTP_STATUS.OK, 
+    success: true, 
+    message: "Referral info fetched", 
+    data: referral 
+  });
+});

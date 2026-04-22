@@ -1,102 +1,47 @@
-const User = require("../models/User");
-const Merchant = require("../models/Merchant");
-const Transaction = require("../models/Transaction");
-const { withSession } = require("../config/db");
+const orchestrator = require("../services/paymentOrchestratorService");
+const settlementService = require("../services/settlementService");
+const asyncHandler = require("../middlewares/asyncHandler");
+const HTTP_STATUS = require("../constants/httpStatus");
 
-const qrPayment = async (req, res) => {
-  const { merchantId, amount } = req.body;
-  const userId = req.user.id;
+exports.initiateQrPay = asyncHandler(async (req, res) => {
+  const { amount, merchantId } = req.body;
 
-  if (!amount || amount <= 0) {
-    return res.status(400).json({ message: "Invalid amount" });
+  const orderData = await orchestrator.initiatePaymentFlow(req.user.id, {
+    amount,
+    merchantId,
+    type: "qr_payment",
+    refPrefix: "QR"
+  });
+
+  res.status(HTTP_STATUS.OK).json({ 
+    statusCode: HTTP_STATUS.OK,
+    success: true,
+    message: "QR Payment initiated",
+    data: orderData 
+  });
+});
+
+exports.verifyQrPay = asyncHandler(async (req, res) => {
+  const result = await orchestrator.verifyAndSettleFlow(req.body);
+
+  res.status(HTTP_STATUS.OK).json({ 
+    statusCode: HTTP_STATUS.OK,
+    success: true,
+    message: result.message,
+    data: result.data
+  });
+});
+
+exports.handleWebhook = asyncHandler(async (req, res) => {
+
+  const signature = req.headers["x-razorpay-signature"];
+
+  const { event, payload } = req.body;
+  if (event === "payment.captured") {
+    const payment = payload.payment.entity;
+
+    await settlementService.finalizePayment(payment.order_id, payment.id);
   }
 
-  try {
-    await withSession(async (session) => {
-      const user = await User.findById(userId).session(session);
-      if (!user) throw new Error("User not found");
-
-      const merchant = await Merchant.findById(merchantId).session(session);
-      if (!merchant) throw new Error("Merchant not found");
-
-      if (user.walletBalance < amount) {
-        return res.status(400).json({ message: "Insufficient wallet balance" });
-      }
-
-      const cashback = Math.floor(amount * 0.05);
-      const commission = Math.floor(amount * 0.05);
-      const merchantCredit = amount - cashback - commission;
-
-      user.walletBalance = user.walletBalance - amount + cashback;
-      await user.save({ session });
-
-      const merchantOwner = await User.findById(merchant.ownerUserId).session(
-        session
-      );
-      if (!merchantOwner) throw new Error("Merchant Owner not found");
-
-      merchantOwner.walletBalance += merchantCredit;
-      await merchantOwner.save({ session });
-
-      const adminUserId = process.env.ADMIN_USER_ID;
-      if (!adminUserId) throw new Error("Admin not configured");
-
-      const adminUser = await User.findById(adminUserId).session(session);
-      if (!adminUser) throw new Error("Admin user not found");
-
-      adminUser.walletBalance += commission;
-      await adminUser.save({ session });
-
-      await Transaction.create(
-        [
-          {
-            userId,
-            merchantId,
-            amount,
-            type: "payment",
-            direction: "debit",
-            meta: { note: "User → Merchant payment" },
-          },
-          {
-            userId,
-            amount: cashback,
-            type: "cashback",
-            direction: "credit",
-            meta: { note: "5% cashback credited" },
-          },
-          {
-            userId: adminUserId,
-            merchantId,
-            amount: commission,
-            type: "commission",
-            direction: "credit",
-            meta: { note: "Admin commission" },
-          },
-          {
-            userId: merchantOwner._id,
-            merchantId,
-            amount: merchantCredit,
-            type: "merchant_credit",
-            direction: "credit",
-            meta: { note: "Merchant credited" },
-          },
-        ],
-        { session }
-      );
-
-      res.json({
-        message: "Payment successful",
-        paidAmount: amount,
-        cashback,
-        commission,
-        merchantCredit,
-        userBalance: user.walletBalance,
-      });
-    });
-  } catch (error) {
-    console.error("qrPayment error:", error);
-    res.status(500).json({ message: error.message });
-  }
-};
-
-module.exports = { qrPayment };
+  res.status(HTTP_STATUS.OK).json({ statusCode: 200, success: true });
+});

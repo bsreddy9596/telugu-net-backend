@@ -4,7 +4,7 @@ const adSchema = new mongoose.Schema(
   {
     merchantId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "merchant",
+      ref: "Merchant",
       required: true,
     },
 
@@ -41,6 +41,12 @@ const adSchema = new mongoose.Schema(
     isPremium: {
       type: Boolean,
       default: false,
+    },
+    cost: {
+      type: Number,
+      required: true,
+      min: 0,
+      default: 0,
     },
   },
   { timestamps: true }

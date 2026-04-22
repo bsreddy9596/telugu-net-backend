@@ -1,8 +1,10 @@
+const env = require("./env");
 const mongoose = require("mongoose");
+const logger = require("./logger");
 
 const connectDB = async () => {
     try {
-        const uri = process.env.DB_URL;
+        const uri = env.dbUrl;
 
         mongoose.set("strictQuery", true);
 
@@ -10,12 +12,9 @@ const connectDB = async () => {
             autoIndex: true,
         });
 
-        console.log(
-            `✅ MongoDB connected: ${uri.includes("mongodb+srv") ? "Atlas Cluster" : "Localhost"
-            }`
-        );
+        logger.info(`MongoDB connected: ${uri.includes("mongodb+srv") ? "Atlas Cluster" : "Localhost"}`);
     } catch (error) {
-        console.error("❌ MongoDB connection error:", error.message);
+        logger.error("MongoDB connection error:", { message: error.message });
         process.exit(1);
     }
 };

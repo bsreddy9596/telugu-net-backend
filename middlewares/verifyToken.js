@@ -1,23 +1,36 @@
 const jwt = require("jsonwebtoken");
 
-module.exports = function (req, res, next) {
-  const authHeader = req.headers["authorization"];
-  if (!authHeader) {
-    return res.status(401).json({ message: "No token provided" });
-  }
+const env = require("../config/env");
+const HTTP_STATUS = require("../constants/httpStatus");
+const { COMMON_MESSAGES } = require("../constants/messages");
+const { buildErrorResponse } = require("../utils/apiResponse");
 
-  const token = authHeader.split(" ")[1];
-  if (!token) {
-    return res.status(401).json({ message: "Invalid token format" });
-  }
-
+module.exports = function protect(req, res, next) {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json(
+        buildErrorResponse({
+          message: COMMON_MESSAGES.MISSING_TOKEN,
+        })
+      );
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, env.accessToken.secret);
+
+    req.user = {
+      id: decoded.sub || decoded.id,
+      role: decoded.role || "user",
+    };
 
     next();
   } catch (err) {
-    console.error("verifyToken error:", err.message);
-    return res.status(401).json({ message: "Unauthorized" });
+    console.error("protect middleware:", err.message);
+    return res.status(HTTP_STATUS.UNAUTHORIZED).json(
+      buildErrorResponse({
+        message: COMMON_MESSAGES.UNAUTHORIZED,
+      })
+    );
   }
 };
