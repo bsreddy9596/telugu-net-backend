@@ -9,7 +9,7 @@ const swaggerDocument = {
   },
   servers: [
     { url: "http://localhost:5000", description: "Local Development Server" },
-    { url: "https://api.telugunet.com", description: "Production Server" },
+    { url: "https://telugu-net-backend-3.onrender.com", description: "Production Server" },
   ],
   security: [{ bearerAuth: [] }],
   tags: [
