@@ -8,8 +8,9 @@ const swaggerDocument = {
     description: "📘 Definitive 1:1 Production API Documentation. Every endpoint, parameter, and response schema exactly as implemented in the backend.",
   },
   servers: [
-    { url: "http://localhost:5000", description: "Local Development Server" },
     { url: "https://telugu-net-backend-3.onrender.com", description: "Production Server" },
+    { url: "http://localhost:5000", description: "Local Development Server" },
+    
   ],
   security: [{ bearerAuth: [] }],
   tags: [
