@@ -12,7 +12,7 @@ const swaggerDocument = {
     { url: "http://localhost:5000", description: "Local Development Server" },
     
   ],
-  security: [{ bearerAuth: [] }],
+  
   tags: [
     { name: "Auth", description: "Authentication & Onboarding" },
     { name: "User", description: "Customer Home & Profile" },
