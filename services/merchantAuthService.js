@@ -2,7 +2,6 @@ const Merchant = require("../models/Merchant");
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const Otp = require("../models/Otp");
-const twilio = require("twilio");
 const jwt = require("jsonwebtoken");
 const env = require("../config/env");
 const { withSession } = require("../config/db");
@@ -10,89 +9,35 @@ const AppError = require("../utils/AppError");
 const HTTP_STATUS = require("../constants/httpStatus");
 const logger = require("../config/logger");
 
-const twilioClient = twilio(env.twilio.sid, env.twilio.authToken);
-
 const sendOtp = async ({ phone }) => {
   const PHONE_REGEX = /^\+\d{10,15}$/;
   if (!phone || !PHONE_REGEX.test(phone)) {
     throw new AppError("Invalid phone number", HTTP_STATUS.BAD_REQUEST);
   }
 
-  const isDev = env.nodeEnv !== "production";
-
-  if (isDev) {
-    return {
-      statusCode: HTTP_STATUS.OK,
-      message: "OTP sent (dev mode)",
-      data: {
-        phone,
-        otp: "1234"
-      }
-    };
-  }
-
-  const isDebugMode =
-    !env.twilio.sid ||
-    env.twilio.sid.includes("placeholder") ||
-    !env.twilio.verifySid ||
-    env.twilio.verifySid.includes("placeholder");
-  let otpCode = null;
-
-  if (isDebugMode) {
-    otpCode = Math.floor(1000 + Math.random() * 9000).toString();
-  } else {
-    try {
-      await twilioClient.verify.v2.services(env.twilio.verifySid).verifications.create({ to: phone, channel: "sms" });
-    } catch (err) {
-      logger.error("Twilio Send Error:", err.message);
-      throw new AppError("Failed to send OTP. SMS service is currently unavailable.", HTTP_STATUS.INTERNAL_SERVER_ERROR);
-    }
-  }
-
+  const otpCode = "1234";
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
   await Otp.findOneAndUpdate(
     { phone },
-    { codeHash: otpCode || "SENT_VIA_TWILIO", expiresAt },
+    { codeHash: otpCode, expiresAt },
     { upsert: true }
   );
 
-  return { statusCode: HTTP_STATUS.OK, message: "OTP sent", data: { phone } };
+  return { 
+    statusCode: HTTP_STATUS.OK, 
+    message: "OTP sent (static)", 
+    data: { 
+      phone,
+      otp: otpCode 
+    } 
+  };
 };
 
 const verifyOtp = async ({ phone, otp }) => {
   if (!phone || !otp) throw new AppError("Phone and OTP are required", HTTP_STATUS.BAD_REQUEST);
 
-  const isDev = env.nodeEnv !== "production";
-
-  if (isDev) {
-    if (otp !== "1234") {
-      throw new AppError("Invalid or expired OTP", HTTP_STATUS.BAD_REQUEST);
-    }
-  } else {
-    const isDebugMode =
-      !env.twilio.sid ||
-      env.twilio.sid.includes("placeholder") ||
-      !env.twilio.verifySid ||
-      env.twilio.verifySid.includes("placeholder");
-
-    if (isDebugMode) {
-      const otpRecord = await Otp.findOne({ phone }).lean();
-      if (!otpRecord || otpRecord.codeHash !== otp || otpRecord.expiresAt < new Date()) {
-        throw new AppError("Invalid or expired OTP", HTTP_STATUS.BAD_REQUEST);
-      }
-      await Otp.deleteOne({ phone });
-    } else {
-      try {
-        const verificationCheck = await twilioClient.verify.v2.services(env.twilio.verifySid).verificationChecks.create({ to: phone, code: otp });
-        if (verificationCheck.status !== "approved") {
-          throw new AppError("Invalid or expired OTP", HTTP_STATUS.BAD_REQUEST);
-        }
-      } catch (err) {
-        logger.error("Twilio Verify Error:", err.message);
-        if (err instanceof AppError) throw err;
-        throw new AppError("Failed to verify OTP with SMS provider.", HTTP_STATUS.INTERNAL_SERVER_ERROR);
-      }
-    }
+  if (otp !== "1234") {
+    throw new AppError("Invalid or expired OTP", HTTP_STATUS.BAD_REQUEST);
   }
 
   const merchant = await Merchant.findOne({ phone }).lean();

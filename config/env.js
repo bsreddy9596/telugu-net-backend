@@ -31,12 +31,6 @@ module.exports = {
     expiresInDays: Number(process.env.REFRESH_TOKEN_EXPIRES_DAYS || 7),
   },
   
-  twilio: {
-    sid: requireEnv("TWILIO_SID"),
-    authToken: requireEnv("TWILIO_AUTH_TOKEN"),
-    verifySid: requireEnv("TWILIO_VERIFY_SID"),
-  },
-  
   swagger: {
     localUrl: process.env.SWAGGER_LOCAL_URL || "http://localhost:5000",
     productionUrl: process.env.SWAGGER_PRODUCTION_URL || "https://api.telugunet.in",
