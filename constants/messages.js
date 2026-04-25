@@ -8,7 +8,7 @@ module.exports = {
   },
   AUTH_MESSAGES: {
     INVALID_PHONE: "Valid phone number required with country code",
-    OTP_SENT: "OTP sent successfully via Twilio Verify",
+    OTP_SENT: "OTP sent successfully (static)",
     MISSING_AUTHORIZATION_HEADER: "Missing Authorization header",
     INVALID_OTP_CODE: "Valid 6-digit OTP code required",
     INVALID_OR_EXPIRED_OTP: "Invalid or expired OTP",

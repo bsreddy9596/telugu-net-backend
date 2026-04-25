@@ -102,7 +102,19 @@ const swaggerDocument = {
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "OTP sent (static)",
+                  "data": {
+                    "phone": "+919876543210",
+                    "otp": "1234"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -647,7 +659,19 @@ const swaggerDocument = {
         },
         "responses": {
           "200": {
-            "description": "Success"
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "OTP sent (static)",
+                  "data": {
+                    "phone": "9876543210",
+                    "otp": "1234"
+                  }
+                }
+              }
+            }
           }
         }
       }

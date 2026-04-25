@@ -4,7 +4,7 @@ exports.sendOtpValidation = [
   body("phone")
     .notEmpty()
     .withMessage("Phone number is required")
-    .matches(/^\d{10}$/)
+    .matches(/^\d{10,15}$/)
     .withMessage("Phone must be 10 digits"),
 ];
 
@@ -12,7 +12,7 @@ exports.verifyOtpValidation = [
   body("phone")
     .notEmpty()
     .withMessage("Phone number is required")
-    .matches(/^\d{10}$/)
+    .matches(/^\d{10,15}$/)
     .withMessage("Phone must be 10 digits"),
   body("otp")
     .notEmpty()
