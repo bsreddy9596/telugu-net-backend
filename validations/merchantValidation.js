@@ -1,24 +1,27 @@
 const { body } = require("express-validator");
+console.log("MERCHANT VALIDATION LOADED");
+
+const PHONE_REGEX = /^\+?\d{10,15}$/;
 
 exports.sendOtpValidation = [
   body("phone")
     .notEmpty()
     .withMessage("Phone number is required")
-    .matches(/^\d{10,15}$/)
-    .withMessage("Phone must be 10 digits"),
+    .matches(PHONE_REGEX)
+    .withMessage("Phone must be 10–15 digits (with optional +)"),
 ];
 
 exports.verifyOtpValidation = [
   body("phone")
     .notEmpty()
     .withMessage("Phone number is required")
-    .matches(/^\d{10,15}$/)
-    .withMessage("Phone must be 10 digits"),
+    .matches(PHONE_REGEX)
+    .withMessage("Phone must be valid"),
   body("otp")
     .notEmpty()
     .withMessage("OTP code is required")
-    .isLength({ min: 6, max: 6 })
-    .withMessage("OTP must be 6 digits"),
+    .isLength({ min: 4, max: 6 })
+    .withMessage("OTP must be 4 to 6 digits"),
 ];
 
 exports.signupValidation = [
@@ -27,8 +30,8 @@ exports.signupValidation = [
   body("phone")
     .notEmpty()
     .withMessage("Phone is required")
-    .matches(/^\d{10}$/)
-    .withMessage("Phone must be 10 digits"),
+    .matches(PHONE_REGEX)
+    .withMessage("Phone must be valid"),
   body("password")
     .notEmpty()
     .withMessage("Password is required")
@@ -48,7 +51,10 @@ exports.updateBusinessSettingsValidation = [
   body("address").optional().trim().notEmpty(),
   body("city").optional().trim().notEmpty(),
   body("state").optional().trim().notEmpty(),
-  body("pincode").optional().matches(/^\d{6}$/).withMessage("Pincode must be 6 digits"),
+  body("pincode")
+    .optional()
+    .matches(/^\d{6}$/)
+    .withMessage("Pincode must be 6 digits"),
 ];
 
 exports.withdrawalValidation = [
@@ -61,7 +67,9 @@ exports.withdrawalValidation = [
 
 exports.createAdValidation = [
   body("title").notEmpty().withMessage("Ad title is required"),
-  body("media").isArray({ min: 1 }).withMessage("At least one media file is required"),
+  body("media")
+    .isArray({ min: 1 })
+    .withMessage("At least one media file is required"),
   body("category").optional(),
   body("location").optional(),
   body("isPremium").optional().isBoolean(),

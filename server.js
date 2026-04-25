@@ -7,6 +7,7 @@ const compression = require("compression");
 const env = require("./config/env");
 const logger = require("./config/logger");
 const { connectDB } = require("./config/db");
+console.log("SERVER RUNNING FROM:", __dirname);
 const { initAdmin } = require("./config/initAdmin");
 const { swaggerDocs } = require("./config/swagger");
 const requestLogger = require("./middlewares/requestLogger");

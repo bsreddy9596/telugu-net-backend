@@ -9,8 +9,9 @@ const AppError = require("../utils/AppError");
 const HTTP_STATUS = require("../constants/httpStatus");
 const logger = require("../config/logger");
 
+const PHONE_REGEX = /^\+?\d{10,15}$/;
+
 const sendOtp = async ({ phone }) => {
-  const PHONE_REGEX = /^\+\d{10,15}$/;
   if (!phone || !PHONE_REGEX.test(phone)) {
     throw new AppError("Invalid phone number", HTTP_STATUS.BAD_REQUEST);
   }
@@ -28,7 +29,7 @@ const sendOtp = async ({ phone }) => {
     message: "OTP sent (static)", 
     data: { 
       phone,
-      otp: otpCode 
+      ...(env.nodeEnv !== "production" && { otp: otpCode })
     } 
   };
 };
@@ -36,9 +37,11 @@ const sendOtp = async ({ phone }) => {
 const verifyOtp = async ({ phone, otp }) => {
   if (!phone || !otp) throw new AppError("Phone and OTP are required", HTTP_STATUS.BAD_REQUEST);
 
-  if (otp !== "1234") {
+  const otpRecord = await Otp.findOne({ phone }).lean();
+  if (!otpRecord || otpRecord.codeHash !== otp || otpRecord.expiresAt < new Date()) {
     throw new AppError("Invalid or expired OTP", HTTP_STATUS.BAD_REQUEST);
   }
+  await Otp.deleteOne({ phone });
 
   const merchant = await Merchant.findOne({ phone }).lean();
 

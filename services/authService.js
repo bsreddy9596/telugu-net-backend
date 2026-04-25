@@ -7,7 +7,7 @@ const User = require("../models/User");
 const Otp = require("../models/Otp");
 const AppError = require("../utils/AppError");
 
-const PHONE_REGEX = /^\+\d{10,15}$/;
+const PHONE_REGEX = /^\+?\d{10,15}$/;
 
 async function requestOtp({ phone }) {
   if (!phone || !PHONE_REGEX.test(phone)) {
@@ -28,7 +28,7 @@ async function requestOtp({ phone }) {
     message: "OTP sent (static)",
     data: {
       phone,
-      otp: otpCode
+      ...(env.nodeEnv !== "production" && { otp: otpCode })
     }
   };
 }
@@ -38,9 +38,11 @@ async function verifyOtp({ phone, otp }) {
     throw new AppError("Phone and OTP are required", HTTP_STATUS.BAD_REQUEST);
   }
 
-  if (otp !== "1234") {
+  const otpRecord = await Otp.findOne({ phone }).lean();
+  if (!otpRecord || otpRecord.codeHash !== otp || otpRecord.expiresAt < new Date()) {
     throw new AppError(AUTH_MESSAGES.INVALID_OR_EXPIRED_OTP, HTTP_STATUS.BAD_REQUEST);
   }
+  await Otp.deleteOne({ phone });
 
   let user = await User.findOne({ phone }).lean();
 

@@ -41,7 +41,28 @@ const {
   createAdValidation,
 } = require("../validations/merchantValidation");
 
-router.post("/send-otp", sendOtpValidation, validate, sendOtp);
+
+router.post(
+  "/send-otp",
+
+  // 🔥 NORMALIZE BEFORE VALIDATION
+  (req, res, next) => {
+    console.log("SEND OTP ROUTE HIT");
+    if (req.body.phone) {
+      let phone = req.body.phone.replace(/\s+/g, "");
+      if (!phone.startsWith("+")) {
+        phone = "+91" + phone;
+      }
+      req.body.phone = phone;
+    }
+    next();
+  },
+
+  sendOtpValidation,
+  validate,
+  sendOtp
+);
+
 router.post("/verify-otp", verifyOtpValidation, validate, verifyOtp);
 router.post("/register", signupValidation, validate, register);
 

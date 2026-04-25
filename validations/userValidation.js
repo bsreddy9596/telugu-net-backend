@@ -13,8 +13,8 @@ exports.updateProfileValidation = [
     .normalizeEmail(),
   body("phone")
     .optional()
-    .matches(/^[0-9]{10}$/)
-    .withMessage("Phone number must be 10 digits"),
+    .matches(/^\+?\d{10,15}$/)
+    .withMessage("Phone number must be 10-15 digits"),
   body("dob")
     .optional()
     .isISO8601()

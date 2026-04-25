@@ -5,6 +5,11 @@ const { buildErrorResponse } = require("../utils/apiResponse");
 
 const validate = (req, res, next) => {
   const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    console.log("VALIDATION ERRORS:", JSON.stringify(errors.array(), null, 2));
+    console.log("REQUEST PHONE:", req.body.phone);
+  }
+
   if (errors.isEmpty()) {
     return next();
   }

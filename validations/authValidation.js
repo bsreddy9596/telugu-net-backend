@@ -1,19 +1,21 @@
 const { body } = require("express-validator");
 
+const PHONE_REGEX = /^\+?\d{10,15}$/;
+
 exports.requestOtpValidation = [
   body("phone")
     .notEmpty()
-    .withMessage("Valid phone number required with country code")
-    .matches(/^\+\d{10,15}$/)
-    .withMessage("Valid phone number required with country code"),
+    .withMessage("Phone number is required")
+    .matches(PHONE_REGEX)
+    .withMessage("Valid phone number required"),
 ];
 
 exports.verifyOtpValidation = [
   body("phone")
     .notEmpty()
     .withMessage("Phone number is required")
-    .matches(/^\+\d{10,15}$/)
-    .withMessage("Valid phone number required with country code"),
+    .matches(PHONE_REGEX)
+    .withMessage("Valid phone number required"),
   body("otp")
     .notEmpty()
     .withMessage("OTP is required")

@@ -9,16 +9,29 @@ const AppError = require("../utils/AppError");
 const HTTP_STATUS = require("../constants/httpStatus");
 
 exports.sendOtp = asyncHandler(async (req, res) => {
+  console.log("SEND OTP CONTROLLER HIT, PHONE:", req.body.phone);
+  if (req.body.phone) {
+    req.body.phone = req.body.phone.replace(/\s+/g, "");
+    if (!req.body.phone.startsWith("+")) req.body.phone = "+91" + req.body.phone;
+  }
   const response = await merchantAuthService.sendOtp(req.body);
   return applyServiceResponse(res, response);
 });
 
 exports.verifyOtp = asyncHandler(async (req, res) => {
+  if (req.body.phone) {
+    req.body.phone = req.body.phone.replace(/\s+/g, "");
+    if (!req.body.phone.startsWith("+")) req.body.phone = "+91" + req.body.phone;
+  }
   const response = await merchantAuthService.verifyOtp(req.body);
   return applyServiceResponse(res, response);
 });
 
 exports.register = asyncHandler(async (req, res) => {
+  if (req.body.phone) {
+    req.body.phone = req.body.phone.replace(/\s+/g, "");
+    if (!req.body.phone.startsWith("+")) req.body.phone = "+91" + req.body.phone;
+  }
   const response = await merchantAuthService.register(req.body);
   return applyServiceResponse(res, response);
 });

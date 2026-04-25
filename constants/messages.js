@@ -29,7 +29,7 @@ module.exports = {
     USER_NOT_FOUND: "User not found",
     INVALID_NAME: "Name must be at least 3 characters",
     INVALID_EMAIL: "Invalid email format",
-    INVALID_PHONE: "Phone number must be 10 digits",
+    INVALID_PHONE: "Phone number must be 10-15 digits",
     INVALID_FCM_TOKEN: "Valid FCM token required",
     IMAGE_REQUIRED: "No image file uploaded",
   },
