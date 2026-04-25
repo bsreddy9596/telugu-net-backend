@@ -29,6 +29,8 @@ const merchantSchema = new mongoose.Schema(
       city: { type: String },
       state: { type: String },
       pincode: { type: String },
+      gst: { type: String },
+      website: { type: String },
     },
     bankDetails: {
       accountHolder: { type: String },
@@ -80,6 +82,14 @@ const merchantSchema = new mongoose.Schema(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    twoFactorSecret: {
+      type: String,
+      select: false,
+    },
+    isTwoFactorEnabled: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }

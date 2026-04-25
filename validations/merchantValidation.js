@@ -37,9 +37,11 @@ exports.signupValidation = [
 ];
 
 exports.updateProfileValidation = [
-  body("shop_name").optional().trim().notEmpty(),
-  body("category").optional().trim().notEmpty(),
-  body("bank_details").optional().isObject(),
+  body("name").optional().trim().notEmpty(),
+  body("email").optional().isEmail().withMessage("Invalid email"),
+  body("profileImage").optional().isString(),
+  body("gst").optional().trim(),
+  body("website").optional().isURL().withMessage("Invalid URL format"),
 ];
 
 exports.updateBusinessSettingsValidation = [

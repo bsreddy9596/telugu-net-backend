@@ -1,5 +1,6 @@
 const Merchant = require("../models/Merchant");
 const Offer = require("../models/Offer");
+const ShopItem = require("../models/ShopItem");
 
 const getOffers = async () => {
   const offers = await Offer.find({ isActive: true }).lean();
@@ -55,8 +56,35 @@ const getCategories = async () => {
   }));
 };
 
+const getShopById = async (shopId) => {
+  const shop = await Merchant.findById(shopId).lean();
+  if (!shop || !shop.isActive || shop.status !== "approved") {
+    const AppError = require("../utils/AppError");
+    const HTTP_STATUS = require("../constants/httpStatus");
+    throw new AppError("Shop not found", HTTP_STATUS.NOT_FOUND);
+  }
+  return {
+    merchantId: shop._id,
+    shopName: shop.name || shop.businessDetails?.name,
+    category: shop.category,
+    rating: shop.rating || 0,
+    discount: shop.discount || "",
+    image: shop.image || "",
+    isSponsored: shop.isSponsored || false,
+    businessDetails: shop.businessDetails,
+    location: shop.location
+  };
+};
+
+const getShopItems = async (shopId) => {
+  const items = await ShopItem.find({ shopId, isActive: true }).lean();
+  return items;
+};
+
 module.exports = {
   getOffers,
   getNearbyShops,
   getCategories,
+  getShopById,
+  getShopItems,
 };

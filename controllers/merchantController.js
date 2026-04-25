@@ -5,6 +5,8 @@ const transactionService = require("../services/transactionService");
 const adService = require("../services/adService");
 const asyncHandler = require("../middlewares/asyncHandler");
 const { applyServiceResponse } = require("../utils/serviceResponse");
+const AppError = require("../utils/AppError");
+const HTTP_STATUS = require("../constants/httpStatus");
 
 exports.sendOtp = asyncHandler(async (req, res) => {
   const response = await merchantAuthService.sendOtp(req.body);
@@ -103,5 +105,31 @@ exports.getLoginActivity = asyncHandler(async (req, res) => {
 
 exports.getTerms = asyncHandler(async (req, res) => {
   const response = await merchantBusinessService.getTerms();
+  return applyServiceResponse(res, response);
+});
+
+exports.getAdAnalytics = asyncHandler(async (req, res) => {
+  const response = await adService.getAdAnalytics(req.params.adId, req.user.id);
+  return applyServiceResponse(res, response);
+});
+
+exports.uploadAdMedia = asyncHandler(async (req, res) => {
+  if (!req.file) throw new AppError("Media file is required", HTTP_STATUS.BAD_REQUEST);
+  const response = await adService.uploadAdMedia(req.user.id, req.file.publicUrl);
+  return applyServiceResponse(res, response);
+});
+
+exports.changePassword = asyncHandler(async (req, res) => {
+  const response = await merchantAuthService.changePassword(req.user.id, req.body);
+  return applyServiceResponse(res, response);
+});
+
+exports.setup2fa = asyncHandler(async (req, res) => {
+  const response = await merchantAuthService.setup2fa(req.user.id, req.body);
+  return applyServiceResponse(res, response);
+});
+
+exports.updateBankDetails = asyncHandler(async (req, res) => {
+  const response = await merchantBusinessService.updateBankDetails(req.user.id, req.body);
   return applyServiceResponse(res, response);
 });

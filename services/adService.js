@@ -104,6 +104,30 @@ const deleteAd = async (adId, merchantId) => {
   return { statusCode: HTTP_STATUS.OK, message: AD_MESSAGES.DELETED, data: null };
 };
 
+const getAdAnalytics = async (adId, merchantId) => {
+  const ad = await Ad.findOne({ _id: adId, merchantId }).lean();
+  if (!ad) throw new AppError(AD_MESSAGES.NOT_FOUND, HTTP_STATUS.NOT_FOUND);
+  
+  // Return mock analytics data
+  return {
+    statusCode: HTTP_STATUS.OK,
+    message: "Ad analytics fetched",
+    data: {
+      views: Math.floor(Math.random() * 1000) + 100,
+      clicks: Math.floor(Math.random() * 200) + 10,
+      conversions: Math.floor(Math.random() * 50) + 1,
+    }
+  };
+};
+
+const uploadAdMedia = async (merchantId, mediaUrl) => {
+  return {
+    statusCode: HTTP_STATUS.OK,
+    message: "Media uploaded successfully",
+    data: { url: mediaUrl }
+  };
+};
+
 module.exports = {
   createAd,
   getMerchantAds,
@@ -113,4 +137,6 @@ module.exports = {
   updateAd,
   deleteAd,
   updateAdStatus,
+  getAdAnalytics,
+  uploadAdMedia,
 };

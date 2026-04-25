@@ -17,6 +17,11 @@ const {
   getOffers,
   getNearbyShops,
   getHomeData,
+  payBill,
+  getRewards,
+  redeemReward,
+  getShopById,
+  getShopItems,
 } = require("../controllers/userController");
 
 const {
@@ -39,8 +44,15 @@ router.patch("/settings", updateSettingsValidation, validate, updateUserSettings
 
 router.get("/home", getHomeData);
 router.get("/my-plan", getPlan);
+router.post("/my-plan/paybill", payBill);
+
 router.get("/referral", getReferral);
 router.get("/offers", getOffers);
+router.get("/rewards", getRewards);
+router.post("/rewards/:id/redeem", redeemReward);
+
 router.get("/nearby-shops", getNearbyShops);
+router.get("/shops/:shopId", getShopById);
+router.get("/shops/:shopId/items", getShopItems);
 
 module.exports = router;

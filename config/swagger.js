@@ -10,9 +10,9 @@ const swaggerDocument = {
   servers: [
     { url: "https://telugu-net-backend-3.onrender.com", description: "Production Server" },
     { url: "http://localhost:5000", description: "Local Development Server" },
-    
+    { url: "https://api.telugunet.com", description: "Production Server" },
   ],
-  
+
   tags: [
     { name: "Auth", description: "Authentication & Onboarding" },
     { name: "User", description: "Customer Home & Profile" },
@@ -27,7 +27,12 @@ const swaggerDocument = {
   ],
   components: {
     securitySchemes: {
-      bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT" },
+      bearerAuth: {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+        description: "Pass your JWT token in the Authorization header. Example: 'Authorization: Bearer <token>'"
+      },
     },
     schemas: {
       StandardResponse: {
@@ -145,14 +150,73 @@ const swaggerDocument = {
       post: {
         tags: ["Auth"],
         summary: "Request login/register OTP",
+        description: "Sends OTP to given phone number. In development mode, OTP is returned in response.",
         security: [],
         requestBody: {
           required: true,
-          content: { "application/json": { schema: { type: "object", required: ["phone"], properties: { phone: { type: "string", example: "9876543210" } } } } },
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["phone"],
+                properties: {
+                  phone: {
+                    type: "string",
+                    example: "+919876543210"
+                  }
+                }
+              }
+            }
+          }
         },
-        responses: { 200: { content: { "application/json": { schema: { $ref: "#/components/schemas/StandardResponse" } } } } },
-      },
+        responses: {
+          200: {
+            description: "OTP sent successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  allOf: [
+                    {
+                      $ref: "#/components/schemas/StandardResponse"
+                    },
+                    {
+                      type: "object",
+                      properties: {
+                        data: {
+                          type: "object",
+                          properties: {
+                            phone: {
+                              type: "string",
+                              example: "+919876543210"
+                            },
+                            otp: {
+                              type: "string",
+                              example: "4821",
+                              description: "OTP visible only in development mode"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          400: {
+            description: "Invalid phone number",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     },
+
     "/api/auth/verify-otp": {
       post: {
         tags: ["Auth"],
@@ -160,7 +224,7 @@ const swaggerDocument = {
         security: [],
         requestBody: {
           required: true,
-          content: { "application/json": { schema: { type: "object", required: ["phone", "otp"], properties: { phone: { type: "string", example: "9876543210" }, otp: { type: "string", example: "123456" } } } } },
+          content: { "application/json": { schema: { type: "object", required: ["phone", "otp"], properties: { phone: { type: "string", example: "+919876543210" }, otp: { type: "string", example: "1234" } } } } },
         },
         responses: {
           200: {
@@ -299,6 +363,45 @@ const swaggerDocument = {
         responses: { 200: { content: { "application/json": { schema: { allOf: [{ $ref: "#/components/schemas/StandardResponse" }, { type: "object", properties: { data: { type: "array", items: { type: "object" } } } }] } } } } },
       },
     },
+    "/user/my-plan/paybill": {
+      post: {
+        tags: ["User"],
+        summary: "Pay Plan Bill",
+        requestBody: { content: { "application/json": { schema: { type: "object", properties: { amount: { type: "number" }, planId: { type: "string" } } } } } },
+        responses: { 200: { content: { "application/json": { schema: { $ref: "#/components/schemas/StandardResponse" } } } } },
+      },
+    },
+    "/user/rewards": {
+      get: {
+        tags: ["User"],
+        summary: "Get User Rewards",
+        responses: { 200: { content: { "application/json": { schema: { allOf: [{ $ref: "#/components/schemas/StandardResponse" }, { type: "object", properties: { data: { type: "object" } } }] } } } } },
+      },
+    },
+    "/user/rewards/{id}/redeem": {
+      post: {
+        tags: ["User"],
+        summary: "Redeem Reward",
+        parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        responses: { 200: { content: { "application/json": { schema: { $ref: "#/components/schemas/StandardResponse" } } } } },
+      },
+    },
+    "/user/shops/{shopId}": {
+      get: {
+        tags: ["User"],
+        summary: "Get Shop Details",
+        parameters: [{ name: "shopId", in: "path", required: true, schema: { type: "string" } }],
+        responses: { 200: { content: { "application/json": { schema: { allOf: [{ $ref: "#/components/schemas/StandardResponse" }, { type: "object", properties: { data: { type: "object" } } }] } } } } },
+      },
+    },
+    "/user/shops/{shopId}/items": {
+      get: {
+        tags: ["User"],
+        summary: "Get Shop Items",
+        parameters: [{ name: "shopId", in: "path", required: true, schema: { type: "string" } }],
+        responses: { 200: { content: { "application/json": { schema: { allOf: [{ $ref: "#/components/schemas/StandardResponse" }, { type: "object", properties: { data: { type: "array", items: { type: "object" } } } }] } } } } },
+      },
+    },
     "/api/merchants/send-otp": {
       post: {
         tags: ["Merchant"],
@@ -343,7 +446,7 @@ const swaggerDocument = {
       patch: {
         tags: ["Merchant"],
         summary: "Update Merchant Info",
-        requestBody: { content: { "application/json": { schema: { type: "object", properties: { shop_name: { type: "string" }, category: { type: "string" }, bank_details: { type: "object" } } } } } },
+        requestBody: { content: { "application/json": { schema: { type: "object", properties: { name: { type: "string" }, email: { type: "string" }, profileImage: { type: "string" }, gst: { type: "string" }, website: { type: "string" } } } } } },
         responses: { 200: { content: { "application/json": { schema: { $ref: "#/components/schemas/StandardResponse" } } } } },
       },
     },
@@ -352,6 +455,30 @@ const swaggerDocument = {
         tags: ["Merchant"],
         summary: "Update Address & Pincode",
         requestBody: { content: { "application/json": { schema: { type: "object", properties: { address: { type: "string" }, city: { type: "string" }, state: { type: "string" }, pincode: { type: "string" } } } } } },
+        responses: { 200: { content: { "application/json": { schema: { $ref: "#/components/schemas/StandardResponse" } } } } },
+      },
+    },
+    "/api/merchants/bank-details": {
+      patch: {
+        tags: ["Merchant"],
+        summary: "Update Bank Details",
+        requestBody: { content: { "application/json": { schema: { type: "object", properties: { bankDetails: { type: "object", properties: { accountHolder: { type: "string" }, bankName: { type: "string" }, accountNumber: { type: "string" }, ifscCode: { type: "string" } } } } } } } },
+        responses: { 200: { content: { "application/json": { schema: { $ref: "#/components/schemas/StandardResponse" } } } } },
+      },
+    },
+    "/api/merchants/change-password": {
+      post: {
+        tags: ["Merchant"],
+        summary: "Change Password",
+        requestBody: { content: { "application/json": { schema: { type: "object", required: ["newPassword"], properties: { newPassword: { type: "string" } } } } } },
+        responses: { 200: { content: { "application/json": { schema: { $ref: "#/components/schemas/StandardResponse" } } } } },
+      },
+    },
+    "/api/merchants/2fa": {
+      post: {
+        tags: ["Merchant"],
+        summary: "Setup 2FA",
+        requestBody: { content: { "application/json": { schema: { type: "object", required: ["isEnabled"], properties: { isEnabled: { type: "boolean" }, secret: { type: "string" } } } } } },
         responses: { 200: { content: { "application/json": { schema: { $ref: "#/components/schemas/StandardResponse" } } } } },
       },
     },
@@ -438,6 +565,22 @@ const swaggerDocument = {
         summary: "Delete Ad",
         parameters: [{ name: "adId", in: "path", required: true, schema: { type: "string" } }],
         responses: { 200: { content: { "application/json": { schema: { $ref: "#/components/schemas/StandardResponse" } } } } },
+      },
+    },
+    "/api/merchants/ads/{adId}/analytics": {
+      get: {
+        tags: ["Merchant"],
+        summary: "Get Ad Analytics",
+        parameters: [{ name: "adId", in: "path", required: true, schema: { type: "string" } }],
+        responses: { 200: { content: { "application/json": { schema: { allOf: [{ $ref: "#/components/schemas/StandardResponse" }, { type: "object", properties: { data: { type: "object" } } }] } } } } },
+      },
+    },
+    "/api/merchants/ads/upload": {
+      post: {
+        tags: ["Merchant"],
+        summary: "Upload Ad Media",
+        requestBody: { content: { "multipart/form-data": { schema: { type: "object", properties: { media: { type: "string", format: "binary" } } } } } },
+        responses: { 200: { content: { "application/json": { schema: { allOf: [{ $ref: "#/components/schemas/StandardResponse" }, { type: "object", properties: { data: { type: "object", properties: { url: { type: "string" } } } } }] } } } } },
       },
     },
     "/api/merchants/login-activity": {

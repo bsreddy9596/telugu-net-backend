@@ -128,3 +128,53 @@ exports.getReferral = asyncHandler(async (req, res) => {
     data: referral 
   });
 });
+
+exports.payBill = asyncHandler(async (req, res) => {
+  const result = await userService.payBill(req.user.id, req.body);
+  res.status(HTTP_STATUS.OK).json({
+    statusCode: HTTP_STATUS.OK,
+    success: true,
+    message: "Bill paid successfully",
+    data: result
+  });
+});
+
+exports.getRewards = asyncHandler(async (req, res) => {
+  const rewards = await userService.getRewards(req.user.id);
+  res.status(HTTP_STATUS.OK).json({
+    statusCode: HTTP_STATUS.OK,
+    success: true,
+    message: "Rewards fetched successfully",
+    data: rewards
+  });
+});
+
+exports.redeemReward = asyncHandler(async (req, res) => {
+  const result = await userService.redeemReward(req.user.id, req.params.id);
+  res.status(HTTP_STATUS.OK).json({
+    statusCode: HTTP_STATUS.OK,
+    success: true,
+    message: "Reward redeemed successfully",
+    data: result
+  });
+});
+
+exports.getShopById = asyncHandler(async (req, res) => {
+  const shop = await discoveryService.getShopById(req.params.shopId);
+  res.status(HTTP_STATUS.OK).json({
+    statusCode: HTTP_STATUS.OK,
+    success: true,
+    message: "Shop details fetched",
+    data: shop
+  });
+});
+
+exports.getShopItems = asyncHandler(async (req, res) => {
+  const items = await discoveryService.getShopItems(req.params.shopId);
+  res.status(HTTP_STATUS.OK).json({
+    statusCode: HTTP_STATUS.OK,
+    success: true,
+    message: "Shop items fetched",
+    data: items
+  });
+});

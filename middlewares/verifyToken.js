@@ -11,13 +11,30 @@ module.exports = function protect(req, res, next) {
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(HTTP_STATUS.UNAUTHORIZED).json(
         buildErrorResponse({
-          message: COMMON_MESSAGES.MISSING_TOKEN,
+          message: "No token provided",
         })
       );
     }
 
     const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, env.accessToken.secret);
+    
+    let decoded;
+    try {
+      decoded = jwt.verify(token, env.jwt.secret);
+    } catch (err) {
+      if (err.name === "TokenExpiredError") {
+        return res.status(HTTP_STATUS.UNAUTHORIZED).json(
+          buildErrorResponse({
+            message: "Token expired",
+          })
+        );
+      }
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json(
+        buildErrorResponse({
+          message: "Invalid token",
+        })
+      );
+    }
 
     req.user = {
       id: decoded.sub || decoded.id,
@@ -29,7 +46,7 @@ module.exports = function protect(req, res, next) {
     console.error("protect middleware:", err.message);
     return res.status(HTTP_STATUS.UNAUTHORIZED).json(
       buildErrorResponse({
-        message: COMMON_MESSAGES.UNAUTHORIZED,
+        message: "Unauthorized",
       })
     );
   }

@@ -4,8 +4,8 @@ const crypto = require("crypto");
 const RefreshToken = require("../models/RefreshToken");
 const env = require("../config/env");
 
-const ACCESS_TOKEN_SECRET = env.accessToken.secret;
-const ACCESS_TOKEN_EXPIRES_IN = env.accessToken.expiresIn;
+const JWT_SECRET = env.jwt.secret;
+const JWT_EXPIRES_IN = env.jwt.expiresIn;
 const REFRESH_TOKEN_EXPIRES_DAYS = env.refreshToken.expiresInDays;
 
 function createAccessToken(user) {
@@ -14,8 +14,8 @@ function createAccessToken(user) {
     role: user.role,
   };
 
-  return jwt.sign(payload, ACCESS_TOKEN_SECRET, {
-    expiresIn: ACCESS_TOKEN_EXPIRES_IN,
+  return jwt.sign(payload, JWT_SECRET, {
+    expiresIn: JWT_EXPIRES_IN,
   });
 }
 

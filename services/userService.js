@@ -160,6 +160,43 @@ const getHomeData = async (userId, { lat, lng }) => {
   };
 };
 
+const payBill = async (userId, data) => {
+  const { amount, planId } = data;
+  if (!amount || amount <= 0) throw new AppError("Invalid amount", HTTP_STATUS.BAD_REQUEST);
+
+  const balance = await walletService.getBalance(userId);
+  if (balance < amount) throw new AppError("Insufficient wallet balance", HTTP_STATUS.BAD_REQUEST);
+
+  await walletService.debit(userId, amount, "bill_payment", "Plan Bill Payment");
+  return { success: true, amountPaid: amount, planId };
+};
+
+const getRewards = async (userId) => {
+  const profile = await getProfile(userId);
+  return {
+    cashback: profile.cashback || 0,
+    referralEarnings: profile.referralEarnings || 0,
+    totalRewards: (profile.cashback || 0) + (profile.referralEarnings || 0)
+  };
+};
+
+const redeemReward = async (userId, rewardId) => {
+  const profile = await getProfile(userId);
+  if (rewardId === 'cashback') {
+    if (!profile.cashback || profile.cashback <= 0) throw new AppError("No cashback to redeem", HTTP_STATUS.BAD_REQUEST);
+    await walletService.credit(userId, profile.cashback, "cashback", "Cashback Redeemed");
+    await updateProfile(userId, { cashback: 0 });
+    return { redeemed: profile.cashback, type: 'cashback' };
+  } else if (rewardId === 'referral') {
+    if (!profile.referralEarnings || profile.referralEarnings <= 0) throw new AppError("No referral earnings to redeem", HTTP_STATUS.BAD_REQUEST);
+    await walletService.credit(userId, profile.referralEarnings, "cashback", "Referral Earnings Redeemed");
+    await updateProfile(userId, { referralEarnings: 0 });
+    return { redeemed: profile.referralEarnings, type: 'referral' };
+  } else {
+    throw new AppError("Invalid reward ID. Use 'cashback' or 'referral'.", HTTP_STATUS.BAD_REQUEST);
+  }
+};
+
 module.exports = {
   getProfile,
   updateProfile,
@@ -171,4 +208,7 @@ module.exports = {
   getReferral,
   getPlan,
   getHomeData,
+  payBill,
+  getRewards,
+  redeemReward,
 };

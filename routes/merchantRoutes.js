@@ -22,8 +22,14 @@ const {
   updateAd,
   deleteAd,
   getLoginActivity,
-  getTerms
+  getTerms,
+  getAdAnalytics,
+  uploadAdMedia,
+  changePassword,
+  setup2fa,
+  updateBankDetails
 } = require("../controllers/merchantController");
+const { upload } = require("../middlewares/uploadFirebase");
 
 const {
   sendOtpValidation,
@@ -62,5 +68,12 @@ router.delete("/ads/:adId", deleteAd);
 
 router.get("/login-activity", getLoginActivity);
 router.get("/terms", getTerms);
+
+router.post("/change-password", changePassword);
+router.post("/2fa", setup2fa);
+router.patch("/bank-details", updateBankDetails);
+
+router.get("/ads/:adId/analytics", getAdAnalytics);
+router.post("/ads/upload", upload.single("media"), uploadAdMedia);
 
 module.exports = router;

@@ -1,5 +1,6 @@
 const Merchant = require("../models/Merchant");
 const User = require("../models/User");
+const bcrypt = require("bcryptjs");
 const Otp = require("../models/Otp");
 const twilio = require("twilio");
 const jwt = require("jsonwebtoken");
@@ -116,8 +117,38 @@ const register = async ({ phone, name, email, dob, businessDetails, bankDetails 
   return result;
 };
 
+const changePassword = async (merchantId, data) => {
+  const { newPassword } = data;
+  if (!newPassword || newPassword.length < 6) {
+    throw new AppError("Password must be at least 6 characters long", HTTP_STATUS.BAD_REQUEST);
+  }
+
+  const merchant = await Merchant.findById(merchantId).lean();
+  if (!merchant) throw new AppError("Merchant not found", HTTP_STATUS.NOT_FOUND);
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+  await User.findByIdAndUpdate(merchant.ownerUserId, { password: hashedPassword });
+
+  return { statusCode: HTTP_STATUS.OK, message: "Password updated successfully" };
+};
+
+const setup2fa = async (merchantId, data) => {
+  const { isEnabled, secret } = data;
+  
+  const updateData = { isTwoFactorEnabled: isEnabled };
+  if (secret) updateData.twoFactorSecret = secret;
+
+  await Merchant.findByIdAndUpdate(merchantId, updateData);
+
+  return { statusCode: HTTP_STATUS.OK, message: `2FA has been ${isEnabled ? 'enabled' : 'disabled'}` };
+};
+
 module.exports = {
   sendOtp,
   verifyOtp,
   register,
+  changePassword,
+  setup2fa,
 };

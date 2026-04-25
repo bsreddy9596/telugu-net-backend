@@ -19,7 +19,7 @@ const login = async ({ email, password }) => {
   if (!isMatch) throw new AppError(AUTH_MESSAGES.INVALID_CREDENTIALS || "Invalid credentials", HTTP_STATUS.UNAUTHORIZED);
 
   const payload = { id: admin._id, email: admin.email, role: admin.role };
-  const token = jwt.sign(payload, env.accessToken.secret, { expiresIn: env.accessToken.expiresIn });
+  const token = jwt.sign(payload, env.jwt.secret, { expiresIn: env.jwt.expiresIn });
 
   return {
     statusCode: HTTP_STATUS.OK,

@@ -15,12 +15,18 @@ const getProfile = async (merchantId) => {
 };
 
 const updateProfile = async (merchantId, data) => {
-  const { name, email, profileImage } = data;
+  const { name, email, profileImage, gst, website } = data;
+  
+  const updatePayload = { name, email, image: profileImage };
+  if (gst !== undefined) updatePayload["businessDetails.gst"] = gst;
+  if (website !== undefined) updatePayload["businessDetails.website"] = website;
+
   const merchant = await Merchant.findByIdAndUpdate(
     merchantId, 
-    { name, email, image: profileImage }, 
+    { $set: updatePayload }, 
     { new: true, runValidators: true }
   ).lean();
+  
   if (!merchant) throw new AppError(MERCHANT_MESSAGES.NOT_FOUND, HTTP_STATUS.NOT_FOUND);
   return { statusCode: HTTP_STATUS.OK, message: MERCHANT_MESSAGES.PROFILE_UPDATED, data: merchant };
 };
@@ -74,6 +80,16 @@ const getTerms = async () => {
   return { statusCode: HTTP_STATUS.OK, message: "Terms fetched", data: { content: "Merchant Terms & Privacy Policy..." } };
 };
 
+const updateBankDetails = async (merchantId, bankDetails) => {
+  const merchant = await Merchant.findByIdAndUpdate(
+    merchantId,
+    { $set: { bankDetails } },
+    { new: true, runValidators: true }
+  ).lean();
+  if (!merchant) throw new AppError(MERCHANT_MESSAGES.NOT_FOUND, HTTP_STATUS.NOT_FOUND);
+  return { statusCode: HTTP_STATUS.OK, message: "Bank details updated", data: merchant.bankDetails };
+};
+
 module.exports = {
   getProfile,
   updateProfile,
@@ -82,4 +98,5 @@ module.exports = {
   updateNotifications,
   getLoginActivity,
   getTerms,
+  updateBankDetails,
 };

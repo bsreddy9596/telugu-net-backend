@@ -19,19 +19,28 @@ async function requestOtp({ phone }) {
   }
 
   let otpCode = null;
-  const isDebugMode = !env.twilio.sid || !env.twilio.verifySid || env.nodeEnv === "development";
+  const isDebugMode =
+    !env.twilio.sid ||
+    !env.twilio.verifySid ||
+    env.nodeEnv === "development";
 
   if (isDebugMode) {
     otpCode = Math.floor(1000 + Math.random() * 9000).toString();
 
+    console.log("DEBUG OTP:", otpCode, "Phone:", phone);
   } else {
     const verification = await twilioClient.verify.v2
       .services(env.twilio.verifySid)
       .verifications.create({ to: phone, channel: "sms" });
-    logger.info("OTP sent successfully via Twilio", { phone, verificationSid: verification.sid });
+
+    logger.info("OTP sent successfully via Twilio", {
+      phone,
+      verificationSid: verification.sid,
+    });
   }
 
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
   await Otp.findOneAndUpdate(
     { phone },
     { codeHash: otpCode || "SENT_VIA_TWILIO", expiresAt },
@@ -40,8 +49,11 @@ async function requestOtp({ phone }) {
 
   return {
     statusCode: HTTP_STATUS.OK,
-    message: isDebugMode ? "OTP sent" : AUTH_MESSAGES.OTP_SENT,
-    data: { phone }
+    message: isDebugMode ? "OTP sent (debug mode)" : AUTH_MESSAGES.OTP_SENT,
+    data: {
+      phone,
+      otp: otpCode
+    }
   };
 }
 
